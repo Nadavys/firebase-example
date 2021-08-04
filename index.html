@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Firebase Auth</title>
+</head>
+<script src="./config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-auth.js"></script>
+
+
+<body>
+    <h1>Firebase Auth Example App</h1>
+
+    <div id="loginform" hidden>
+        <form>
+            <div>
+                <h2>Login form</h2>
+                <label>Email</label>
+                <input id="email" name="email" />
+            </div>
+            <div>
+                <label>Password</label>
+                <input id="password" name="password" type="password" />
+            </div>
+            <input type="submit" value="login" />
+        </form>
+
+    </div>
+
+    <div id="loggedinuser" hidden>
+        <div>
+            <form id="userinfo">
+                <input type="text" id="displayname">
+                <input type="submit" value="update" />
+            </form>
+        </div>
+
+        <br />
+        <button onclick="logout()">Log out</button>
+    </div>
+
+    <script>
+        const loginform = document.getElementById('loginform');
+        const form = loginform.firstElementChild;
+        const loggedinuser = document.getElementById('loggedinuser')
+        const userinfo = document.getElementById('userinfo')
+        const displayname = document.getElementById('displayname')
+
+        firebase.initializeApp(firebaseConfig)
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+
+                loginform.hidden = true;
+                loggedinuser.hidden = false;
+                displayname.value = user.displayName
+                console.log("signed in uid:", user.uid);
+            } else {
+                loginform.hidden = false;
+                loggedinuser.hidden = true;
+                console.log("signed out");
+            }
+        });
+
+        function logout() {
+            const user = firebase.auth().currentUser;
+            firebase.auth().signOut()
+        }
+
+        function updateprofile(e) {
+            console.log(e);
+            e.preventDefault();
+            const user = firebase.auth().currentUser;
+
+            user.updateProfile({
+                displayName: displayname.value,
+            })
+        }
+        userinfo.onsubmit = updateprofile
+
+
+        function login(email, password) {
+            return new Promise(
+                (fulfilled, rejected) => {
+                    firebase.auth().signInWithEmailAndPassword(email, password)
+                        .then((userCredential) => {
+                            // Signed in
+                            const user = userCredential.user;
+                            fulfilled(userCredential.user);
+
+                        })
+                        .catch((error) => {
+                            rejected(error.message)
+                        });
+                })
+
+        }
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            console.log();
+            const email = document.querySelector('#email').value;
+            const pw = document.querySelector('#password').value;
+            login(email, pw)
+                .then(
+                    (user) => {
+                        console.log("Successful login", user);
+                    }
+                ).catch(
+                    alert
+                )
+        }
+
+    </script>
+</body>
+
+</html>
